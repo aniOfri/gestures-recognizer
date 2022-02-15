@@ -1,5 +1,5 @@
 const { readdir, readFile }= require('fs/promises');
-//const tf =require('@tensorflow/tfjs-node');
+const tf =require('@tensorflow/tfjs-node');
 
 var PNG = require('png-js');
 
@@ -24,10 +24,11 @@ app.listen(PORT, ()=>{
     console.log(`Server is runing on port ${PORT}`)
 })*/
 
+const LABELS = ["background", "four", "L", "three", "thumbsup", "two", "up"]
+
 async function getData(){
     const TRAINING = "./dataset/training_set/";
     const TEST = "./dataset/test_set/";
-    const LABELS = ["background", "four", "L", "three", "thumbsup", "two", "up"]
     
     train_data = [];
     for (let label of LABELS){
@@ -116,7 +117,7 @@ function getModel(){
     model.add(tf.layers.dense({
       units: 64,
       kernelInitializer: 'varianceScaling',
-      activation: 'rule'
+      activation: 'relu'
     }));
 
     const NUM_OUTPUT_CLASSES = 7;
@@ -137,25 +138,84 @@ function getModel(){
 }
 
 async function train(model, data){
+    const BATCH_SIZE = 1000;
+    const TRAIN = 1000;
+    const TEST = 300;
 
+    const [trainXs, trainYs] = tf.tidy(()=>{
+        const d = normalizeData(TRAIN, data[0]);
+
+        return [
+            d.xs.reshape([TRAIN, 90, 70, 1]),
+            d.labels
+        ];
+    });
+
+    const [testXs, testYs] = tf.tidy(()=>{
+        const d = normalizeData(TEST, data[1]);
+
+        return [
+            d.xs.reshape([TEST, 90, 70, 1]),
+            d.labels
+        ];
+    });
+
+    return model.fit(trainXs, trainYs, {
+        batchSize: BATCH_SIZE,
+        validationData: [testXs, testYs],
+        epochs: 100,
+        shuffle: true
+      });
 }
 
 function normalizeData(batchSize, data){
+    var imagesArray = new Float32Array(batchSize * 90*70);
+    var labelsArray = new Uint8Array(batchSize * 7);
 
+    for (let i = 0; i < batchSize; i++) {
+        var image = new Float32Array(data[i][1]);
+        output = [0, 0, 0, 0, 0, 0, 0];
+        output[LABELS.indexOf(data[i][0])] = 1;
+        var label = new Uint8Array(output);
+
+        imagesArray.set(image, i*90*70);
+        labelsArray.set(label, i*7);
+    }
+    
+    const xs = tf.tensor2d(imagesArray, [batchSize, 90*70]);
+    const labels = tf.tensor2d(labelsArray, [batchSize, 7]);
+
+    return {xs, labels};
 }
 
 async function doPrediction(model, data, batchSize = 500) {
-    
+    const IMAGE_WIDTH = 28;
+    const IMAGE_HEIGHT = 28;
+    const testData = normalizeData(batchSize, data)
+    const testxs = testData.xs.reshape([batchSize, IMAGE_WIDTH, IMAGE_HEIGHT, 1]);
+    const preds = model.predict(testxs).argMax(-1);
+
+    testxs.dispose();
+    return [preds, labels];
+  }
+
+  async function showAccuracy(model, data, batchSize = 500) {
+    const preds = await doPrediction(model, data, batchSize);
+    pred = await preds.data();
+    for (let i = 0; i < batchSize; i++){
+        console.log(pred[i] +" - "+ data[i][0]);
+    }
+    return
 }
 
 async function start(){
     const data = await getData();
 
-    console.log(data);
-
     model = getModel();
     
     await train(model, data);
+
+    await showAccuracy(model, data[0], 20);
 }
 
 start();
