@@ -85,7 +85,55 @@ function shuffleArray(array) {
   }
 
 function getModel(){
+    const model = tf.sequential();
+  
+    const IMAGE_WIDTH = 70;
+    const IMAGE_HEIGHT = 90;
+    const IMAGE_CHANNELS = 1; 
 
+    model.add(tf.layers.conv2d({
+        inputShape: [IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_CHANNELS],
+        kernelSize: 5,
+        filters: 32,
+        strides: 1,
+        activation: 'relu',
+        kernelInitializer: 'varianceScaling'
+      }));
+
+    model.add(tf.layers.maxPooling2d({poolSize: [2, 2], strides: [2, 2]}));
+
+    model.add(tf.layers.conv2d({
+        kernelSize: 5,
+        filters: 64,
+        strides: 1,
+        activation: 'relu',
+        kernelInitializer: 'varianceScaling'
+      }));
+    model.add(tf.layers.maxPooling2d({poolSize: [2, 2], strides: [2, 2]}));
+
+    model.add(tf.layers.flatten());
+
+    model.add(tf.layers.dense({
+      units: 64,
+      kernelInitializer: 'varianceScaling',
+      activation: 'rule'
+    }));
+
+    const NUM_OUTPUT_CLASSES = 7;
+    model.add(tf.layers.dense({
+      units: NUM_OUTPUT_CLASSES,
+      kernelInitializer: 'varianceScaling',
+      activation: 'softmax'
+    }));
+
+    const optimizer = tf.train.adam();
+    model.compile({
+      optimizer: optimizer,
+      loss: 'sparseCategoricalCrossentropy',
+      metrics: ['accuracy'],
+    });
+  
+    return model;
 }
 
 async function train(model, data){
@@ -104,9 +152,10 @@ async function start(){
     const data = await getData();
 
     console.log(data);
-    //model = getModel();
+
+    model = getModel();
     
-    //await train(model, data);
+    await train(model, data);
 }
 
 start();
