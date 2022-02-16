@@ -27,39 +27,44 @@ app.listen(PORT, ()=>{
 const LABELS = ["background", "four", "L", "three", "thumbsup", "two", "up"]
 
 async function getData(){
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
     const TRAINING = "./dataset/training_set/";
     const TEST = "./dataset/test_set/";
     
-    train_data = [];
+    var train_data = [];
     for (let label of LABELS){
         const files_names = await readdir(TRAINING+label);
         for (let i = 0; i <= 500; i++){
             let file_path = TRAINING+label+"/"+files_names[i];
-            await PNG.decode(file_path, function(pixels) {
+            let array = []
+            PNG.decode(file_path, function(pixels) {    
                 var pixels = Array.from(pixels);
-                var array = []
                 for (let j = 0; j < 90*70*4; j+=4){
-                    array.push(pixels[j+3]/255);
+                    let value = (pixels[j]+pixels[j+1]+pixels[j+2]+pixels[j+3])/4 < 100 ? 0 : 1;
+                    array.push(value);
                 }
-                train_data.push([label, array]);
             });
+            await delay(1)
+            train_data.push([label, array]);
         }
     }
     train_data = shuffleArray(train_data);
 
-    test_data = [];
+    var test_data = [];
     for (let label of LABELS){
         const files_names = await readdir(TEST+label);
         for (let i = 0; i < 350; i++){
             let file_path = TEST+label+"/"+files_names[i];
-            PNG.decode(file_path, function(pixels) {
+            let array = []
+            PNG.decode(file_path, function(pixels) {    
                 var pixels = Array.from(pixels);
-                var array = []
                 for (let j = 0; j < 90*70*4; j+=4){
-                    array.push(pixels[i+3]/255);
+                    let value = (pixels[j]+pixels[j+1]+pixels[j+2]+pixels[j+3])/4 < 100 ? 0 : 1;
+                    array.push(value);
                 }
-                test_data.push([label, array]);
             });
+            await delay(1);
+            test_data.push([label, array]);
         }
     }
     test_data = shuffleArray(test_data);
@@ -130,7 +135,7 @@ function getModel(){
     const optimizer = tf.train.adam();
     model.compile({
       optimizer: optimizer,
-      loss: 'sparseCategoricalCrossentropy',
+      loss: 'categoricalCrossentropy',
       metrics: ['accuracy'],
     });
   
@@ -138,32 +143,37 @@ function getModel(){
 }
 
 async function train(model, data){
-    const BATCH_SIZE = 1000;
-    const TRAIN = 1000;
-    const TEST = 300;
+    const BATCH_SIZE = 300;
+    const TRAIN = 3000;
+    const TEST = 2000;
 
+    console.log(data[0].length)
+    console.log("Tidying train data..");
     const [trainXs, trainYs] = tf.tidy(()=>{
         const d = normalizeData(TRAIN, data[0]);
 
         return [
-            d.xs.reshape([TRAIN, 90, 70, 1]),
+            d.xs.reshape([TRAIN, 70, 90, 1]),
             d.labels
         ];
     });
 
+    console.log(data[1].length)
+    console.log("Tidying test data..");
     const [testXs, testYs] = tf.tidy(()=>{
         const d = normalizeData(TEST, data[1]);
 
         return [
-            d.xs.reshape([TEST, 90, 70, 1]),
+            d.xs.reshape([TEST, 70, 90, 1]),
             d.labels
         ];
     });
 
+    console.log("Training starts..")
     return model.fit(trainXs, trainYs, {
         batchSize: BATCH_SIZE,
         validationData: [testXs, testYs],
-        epochs: 100,
+        epochs: 10,
         shuffle: true
       });
 }
@@ -209,11 +219,17 @@ async function doPrediction(model, data, batchSize = 500) {
 }
 
 async function start(){
+    console.log("Collecting data..");
     const data = await getData();
+    console.log("Data collected.");
 
+    console.log("Generating model..");
     model = getModel();
-    
+    console.log("Model generated.");
+
+    console.log("Training model..")
     await train(model, data);
+    console.log("Model trained.")
 
     await showAccuracy(model, data[0], 20);
 }
