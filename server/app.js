@@ -147,7 +147,6 @@ async function train(model, data){
     const TRAIN = 3000;
     const TEST = 2000;
 
-    console.log(data[0].length)
     console.log("Tidying train data..");
     const [trainXs, trainYs] = tf.tidy(()=>{
         const d = normalizeData(TRAIN, data[0]);
@@ -158,7 +157,6 @@ async function train(model, data){
         ];
     });
 
-    console.log(data[1].length)
     console.log("Tidying test data..");
     const [testXs, testYs] = tf.tidy(()=>{
         const d = normalizeData(TEST, data[1]);
@@ -199,14 +197,14 @@ function normalizeData(batchSize, data){
 }
 
 async function doPrediction(model, data, batchSize = 500) {
-    const IMAGE_WIDTH = 28;
-    const IMAGE_HEIGHT = 28;
+    const IMAGE_WIDTH = 70;
+    const IMAGE_HEIGHT = 90;
     const testData = normalizeData(batchSize, data)
     const testxs = testData.xs.reshape([batchSize, IMAGE_WIDTH, IMAGE_HEIGHT, 1]);
     const preds = model.predict(testxs).argMax(-1);
 
     testxs.dispose();
-    return [preds, labels];
+    return preds;
   }
 
   async function showAccuracy(model, data, batchSize = 500) {
