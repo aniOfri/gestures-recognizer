@@ -10,6 +10,10 @@ const bodyParser = require('body-parser')
 const cors = require('cors');
 
 const PORT = 3000
+const IMAGE_WIDTH = 24;
+const IMAGE_HEIGHT = 21;
+const IMAGE_CHANNELS = 1; 
+const NUM_OUTPUT_CLASSES = 6;
 var model;
 var trained = false;
 
@@ -23,7 +27,6 @@ app.post('/request', async (req, res) =>{;
     if (trained = true){
         var data = req.body.dataUrl;
 
-
         await getPixels(data, async function(err, pixels) { 
             if (err){
                 console.log(err)
@@ -32,18 +35,18 @@ app.post('/request', async (req, res) =>{;
 
             var pixels = Array.from(pixels.data);
             array = [];
-            for (let j = 0; j < 90*70*4; j+=4){
+            for (let j = 0; j < IMAGE_WIDTH*IMAGE_HEIGHT*4; j+=4){
                 let value = (pixels[j]+pixels[j+1]+pixels[j+2]+pixels[j+3])/4 < 100 ? 1 : 0;
                 array.push(value);
             }
 
             const testData = normalizeData(1, [[0, array]])
-            const testxs = testData.xs.reshape([1, 70, 90, 1]);
+            const testxs = testData.xs.reshape([1, IMAGE_WIDTH, IMAGE_HEIGHT, 1]);
             const preds = model.predict(testxs);
     
             var pred = await preds.data();
             var results = [];
-            for (let i = 0; i < 7; i++)
+            for (let i = 0; i < NUM_OUTPUT_CLASSES; i++)
                 results.push(pred[i].toFixed(3));
     
             res.status(200).send({response: results});
@@ -52,26 +55,31 @@ app.post('/request', async (req, res) =>{;
     res.status(404);
 })
 
-app.listen(PORT, ()=>{
+/*app.listen(PORT, ()=>{
     console.log(`Server is runing on port ${PORT}`)
-})
+})*/
 
-const LABELS = ["background", "four", "L", "three", "thumbsup", "two", "up"]
+const LABELS = ["blank", "fist", "five", "ok", "thumbsdown", "thumbsup"]
 
 async function getData(){
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
-    const TRAINING = "./dataset/training_set/";
-    const TEST = "./dataset/test_set/";
+    const TRAINING = "./data/";
+    const TEST = "./data/";
     
     var train_data = [];
     for (let label of LABELS){
+        console.log("Getting TRAINING DATA of "+label+"...");
         const files_names = await readdir(TRAINING+label);
-        for (let i = 0; i <= 500; i++){
+        for (let i = 0; i <= Math.round(files_names.length*(3/4)); i++){
             let file_path = TRAINING+label+"/"+files_names[i];
             let array = []
-            getPixels(file_path, function(pixels) {    
-                var pixels = Array.from(pixels);
-                for (let j = 0; j < 90*70*4; j+=4){
+            getPixels(file_path, function(err, pixels) {    
+                if (err){
+                    console.log(err)
+                    return
+                }
+                var pixels = Array.from(pixels.data);
+                for (let j = 0; j < IMAGE_WIDTH*IMAGE_HEIGHT*4; j+=8){
                     let value = (pixels[j]+pixels[j+1]+pixels[j+2]+pixels[j+3])/4 < 100 ? 0 : 1;
                     array.push(value);
                 }
@@ -84,13 +92,18 @@ async function getData(){
 
     var test_data = [];
     for (let label of LABELS){
+        console.log("Getting TEST DATA of "+label+"...");
         const files_names = await readdir(TEST+label);
-        for (let i = 0; i < 350; i++){
+        for (let i = Math.round(files_names.length*(3/4)); i < Math.round(files_names.length*(1/4)); i++){
             let file_path = TEST+label+"/"+files_names[i];
             let array = []
-            getPixels(file_path, function(pixels) {    
-                var pixels = Array.from(pixels);
-                for (let j = 0; j < 90*70*4; j+=4){
+            getPixels(file_path, function(err, pixels) {    
+                if (err){
+                    console.log(err)
+                    return
+                }
+                var pixels = Array.from(pixels.data);
+                for (let j = 0; j < IMAGE_WIDTH*IMAGE_HEIGHT*4; j+=8){
                     let value = (pixels[j]+pixels[j+1]+pixels[j+2]+pixels[j+3])/4 < 100 ? 0 : 1;
                     array.push(value);
                 }
@@ -124,10 +137,6 @@ function shuffleArray(array) {
 
 function getModel(){
     const model = tf.sequential();
-  
-    const IMAGE_WIDTH = 70;
-    const IMAGE_HEIGHT = 90;
-    const IMAGE_CHANNELS = 1; 
 
     model.add(tf.layers.conv2d({
         inputShape: [IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_CHANNELS],
@@ -157,7 +166,6 @@ function getModel(){
       activation: 'relu'
     }));
 
-    const NUM_OUTPUT_CLASSES = 7;
     model.add(tf.layers.dense({
       units: NUM_OUTPUT_CLASSES,
       kernelInitializer: 'varianceScaling',
@@ -184,7 +192,7 @@ async function train(model, data){
         const d = normalizeData(TRAIN, data[0]);
 
         return [
-            d.xs.reshape([TRAIN, 70, 90, 1]),
+            d.xs.reshape([TRAIN, IMAGE_WIDTH, IMAGE_HEIGHT, 1]),
             d.labels
         ];
     });
@@ -194,7 +202,7 @@ async function train(model, data){
         const d = normalizeData(TEST, data[1]);
 
         return [
-            d.xs.reshape([TEST, 70, 90, 1]),
+            d.xs.reshape([TEST, IMAGE_WIDTH, IMAGE_HEIGHT, 1]),
             d.labels
         ];
     });
@@ -209,28 +217,26 @@ async function train(model, data){
 }
 
 function normalizeData(batchSize, data){
-    var imagesArray = new Float32Array(batchSize * 90*70);
-    var labelsArray = new Uint8Array(batchSize * 7);
+    var imagesArray = new Float32Array(batchSize * IMAGE_WIDTH*IMAGE_HEIGHT);
+    var labelsArray = new Uint8Array(batchSize * NUM_OUTPUT_CLASSES);
 
     for (let i = 0; i < batchSize; i++) {
         var image = new Float32Array(data[i][1]);
-        output = [0, 0, 0, 0, 0, 0, 0];
+        output = [0, 0, 0, 0, 0, 0];
         output[LABELS.indexOf(data[i][0])] = 1;
         var label = new Uint8Array(output);
 
-        imagesArray.set(image, i*90*70);
-        labelsArray.set(label, i*7);
+        imagesArray.set(image, i*IMAGE_WIDTH*IMAGE_HEIGHT);
+        labelsArray.set(label, i*NUM_OUTPUT_CLASSES);
     }
     
-    const xs = tf.tensor2d(imagesArray, [batchSize, 90*70]);
-    const labels = tf.tensor2d(labelsArray, [batchSize, 7]);
+    const xs = tf.tensor2d(imagesArray, [batchSize, IMAGE_WIDTH*IMAGE_HEIGHT]);
+    const labels = tf.tensor2d(labelsArray, [batchSize, NUM_OUTPUT_CLASSES]);
 
     return {xs, labels};
 }
 
 async function doPrediction(model, data, batchSize = 500) {
-    const IMAGE_WIDTH = 70;
-    const IMAGE_HEIGHT = 90;
     const testData = normalizeData(batchSize, data)
     const testxs = testData.xs.reshape([batchSize, IMAGE_WIDTH, IMAGE_HEIGHT, 1]);
     const preds = model.predict(testxs).argMax(-1);
@@ -249,7 +255,7 @@ async function doPrediction(model, data, batchSize = 500) {
 }
 
 async function start(){
-    /*console.log("Collecting data..");
+    console.log("Collecting data..");
     const data = await getData();
     console.log("Data collected.");
 
@@ -259,16 +265,16 @@ async function start(){
 
     console.log("Training model..")
     await train(model, data);
-    console.log("Model trained.")*/
+    console.log("Model trained.")
     
-    console.log("Loading model.")
-    model = await tf.loadLayersModel('file://./my-model/model.json');
+    //console.log("Loading model.")
+    //model = await tf.loadLayersModel('file://./my-model/model.json');
+
+    await showAccuracy(model, data[0], 50);
+
+    console.log("Saving model..")
+    await model.save('file://./my-model');
     trained = true;
-
-    //await showAccuracy(model, data[0], 50);
-
-    //console.log("Saving model..")
-    //await model.save('file://./my-model');
 }
 
 start();

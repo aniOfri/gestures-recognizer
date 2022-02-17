@@ -39,7 +39,7 @@ function intervalTimer() {
  function applyFilters(){
   let src = cv.imread('canvas');
   let dst = new cv.Mat();
-  let dsize = new cv.Size(70, 90);
+  let dsize = new cv.Size(50, 50);
   cv.resize(src, dst, dsize, 0, 0, cv.INTER_AREA);
   cv.imshow('canvas', dst);
   src.delete(); dst.delete();
