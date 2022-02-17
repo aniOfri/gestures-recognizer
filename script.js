@@ -56,7 +56,7 @@ function intervalTimer() {
 
   setInterval(intervalTimer, 100);
 
-
+const LABELS = ['background', 'four fingers', 'L shape', 'three fingers', 'thumbsup', 'two fingers (V shape)', 'pinky and finger']
  function sendCanvas(){
       var canvasData = canvasFilters.toDataURL();
       $.post("http://localhost:3000/request",
@@ -64,7 +64,18 @@ function intervalTimer() {
          dataUrl: canvasData,
       },
       function (data, status) {
-        console.log(data);
+        results = data.response;
+        var maxValue = 0;
+        var maxIndex = -1;
+        for (let i = 0; i < 7; i++){
+          $("#guess"+i).css('color', 'black');
+          $("#guess"+i).html(LABELS[i]+": "+results[i]);
+          if (results[i] > maxValue){
+            maxValue = results[i];
+            maxIndex = i;
+          }
+        }
+        $("#guess"+maxIndex).css('color', 'red');
       });
   }
  
