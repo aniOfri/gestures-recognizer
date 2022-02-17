@@ -221,15 +221,21 @@ async function start(){
     const data = await getData();
     console.log("Data collected.");
 
-    console.log("Generating model..");
+    /*console.log("Generating model..");
     model = getModel();
     console.log("Model generated.");
 
     console.log("Training model..")
     await train(model, data);
-    console.log("Model trained.")
+    console.log("Model trained.")*/
+    
+    console.log("Loading model.")
+    model = await tf.loadLayersModel('file://./my-model/model.json');
 
-    await showAccuracy(model, data[0], 20);
+    await showAccuracy(model, data[0], 50);
+
+    //console.log("Saving model..")
+    //await model.save('file://./my-model');
 }
 
 start();
