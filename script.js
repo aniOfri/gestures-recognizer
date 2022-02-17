@@ -31,35 +31,40 @@ function intervalTimer() {
    ctx.drawImage(video,0,-video.videoHeight,video.videoWidth,video.videoHeight);
    ctx.restore();
 
-   let src = cv.imread('canvas');
-  let dst = new cv.Mat();
-  let dsize = new cv.Size(70, 90);
-  // You can try more different parameters
-  cv.resize(src, dst, dsize, 0, 0, cv.INTER_AREA);
-  cv.imshow('canvas', dst);
-  src.delete(); dst.delete();
-
   applyFilters();
+
+  sendCanvas();
  }
 
  function applyFilters(){
   let src = cv.imread('canvas');
   let dst = new cv.Mat();
-  // You can try more different parameters
-  cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY, 0);
-  cv.imshow('canvasFilters', dst);
+  let dsize = new cv.Size(70, 90);
+  cv.resize(src, dst, dsize, 0, 0, cv.INTER_AREA);
+  cv.imshow('canvas', dst);
   src.delete(); dst.delete();
+
+  src = cv.imread('canvas');
+  dst = new cv.Mat();
+  let low = new cv.Mat(src.rows, src.cols, src.type(), [0, 0, 0, 0]);
+  let high = new cv.Mat(src.rows, src.cols, src.type(), [150, 150, 150, 255]);
+  cv.inRange(src, low, high, dst);
+  cv.imshow('canvasFilters', dst);
+  src.delete(); dst.delete(); low.delete(); high.delete();
+  
  }
 
- var myVar = setInterval(intervalTimer, 2);
+  setInterval(intervalTimer, 100);
 
 
  function sendCanvas(){
+      var canvasData = canvasFilters.toDataURL();
       $.post("http://localhost:3000/request",
       {
          dataUrl: canvasData,
       },
       function (data, status) {
+        console.log(data);
       });
   }
  

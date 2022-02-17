@@ -1,15 +1,17 @@
 const { readdir, readFile }= require('fs/promises');
 const tf =require('@tensorflow/tfjs-node');
 
-var PNG = require('png-js');
+//var PNG = require('png-js');
+var getPixels = require("get-pixels")
 
-/*const express = require('express')
+const express = require('express')
 const app = express()
 const bodyParser = require('body-parser') 
 const cors = require('cors');
 
 const PORT = 3000
 var model;
+var trained = false;
 
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
 
@@ -18,11 +20,41 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 app.use(cors()); 
 
 app.post('/request', async (req, res) =>{;
+    if (trained = true){
+        var data = req.body.dataUrl;
+
+
+        await getPixels(data, async function(err, pixels) { 
+            if (err){
+                console.log(err)
+                return
+            }
+
+            var pixels = Array.from(pixels.data);
+            array = [];
+            for (let j = 0; j < 90*70*4; j+=4){
+                let value = (pixels[j]+pixels[j+1]+pixels[j+2]+pixels[j+3])/4 < 100 ? 1 : 0;
+                array.push(value);
+            }
+
+            const testData = normalizeData(1, [[0, array]])
+            const testxs = testData.xs.reshape([1, 70, 90, 1]);
+            const preds = model.predict(testxs);
+    
+            var pred = await preds.data();
+            var results = [];
+            for (let i = 0; i < 7; i++)
+                results.push(pred[i].toFixed(3));
+    
+            res.status(200).send({response: results});
+        });
+    }
+    res.status(404);
 })
 
 app.listen(PORT, ()=>{
     console.log(`Server is runing on port ${PORT}`)
-})*/
+})
 
 const LABELS = ["background", "four", "L", "three", "thumbsup", "two", "up"]
 
@@ -37,7 +69,7 @@ async function getData(){
         for (let i = 0; i <= 500; i++){
             let file_path = TRAINING+label+"/"+files_names[i];
             let array = []
-            PNG.decode(file_path, function(pixels) {    
+            getPixels(file_path, function(pixels) {    
                 var pixels = Array.from(pixels);
                 for (let j = 0; j < 90*70*4; j+=4){
                     let value = (pixels[j]+pixels[j+1]+pixels[j+2]+pixels[j+3])/4 < 100 ? 0 : 1;
@@ -56,7 +88,7 @@ async function getData(){
         for (let i = 0; i < 350; i++){
             let file_path = TEST+label+"/"+files_names[i];
             let array = []
-            PNG.decode(file_path, function(pixels) {    
+            getPixels(file_path, function(pixels) {    
                 var pixels = Array.from(pixels);
                 for (let j = 0; j < 90*70*4; j+=4){
                     let value = (pixels[j]+pixels[j+1]+pixels[j+2]+pixels[j+3])/4 < 100 ? 0 : 1;
@@ -217,11 +249,11 @@ async function doPrediction(model, data, batchSize = 500) {
 }
 
 async function start(){
-    console.log("Collecting data..");
+    /*console.log("Collecting data..");
     const data = await getData();
     console.log("Data collected.");
 
-    /*console.log("Generating model..");
+    console.log("Generating model..");
     model = getModel();
     console.log("Model generated.");
 
@@ -231,8 +263,9 @@ async function start(){
     
     console.log("Loading model.")
     model = await tf.loadLayersModel('file://./my-model/model.json');
+    trained = true;
 
-    await showAccuracy(model, data[0], 50);
+    //await showAccuracy(model, data[0], 50);
 
     //console.log("Saving model..")
     //await model.save('file://./my-model');
