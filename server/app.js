@@ -58,9 +58,9 @@ app.post('/request', async (req, res) =>{;
     res.status(404);
 })
 
-/*app.listen(PORT, ()=>{
+app.listen(PORT, ()=>{
     console.log(`Server is runing on port ${PORT}`)
-})*/
+})
 
 function printProgress(prefix, progress){
     process.stdout.clearLine();
@@ -79,8 +79,8 @@ async function getData(){
     for (let label of LABELS){
         prefix = "Getting TRAINING DATA of "+label+"...  "
         const files_names = await readdir(TRAINING+label);
-        for (let i = 0; i <= Math.round(files_names.length*(3/4)); i++){
-            printProgress(prefix, i/Math.round(files_names.length*(3/4))*100);
+        for (let i = 0; i <= 750; i++){
+            printProgress(prefix, (i/750)*100);
             TRAINBATCH++;
             let file_path = TRAINING+label+"/"+files_names[i];
             let array = []
@@ -105,8 +105,8 @@ async function getData(){
     for (let label of LABELS){
         prefix = "Getting TEST DATA of "+label+"...  "
         const files_names = await readdir(TEST+label);
-        for (let i = Math.round(files_names.length*(3/4)); i < files_names.length; i++){ 
-            printProgress(prefix, (i-Math.round(files_names.length*(3/4))/(files_names.length*(1/4)))*100); 
+        for (let i = 750; i < 1000; i++){ 
+            printProgress(prefix, ((i-750)/250)*100); 
             TESTBATCH++;
             let file_path = TEST+label+"/"+files_names[i];
             let array = []
