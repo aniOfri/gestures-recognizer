@@ -56,7 +56,7 @@ function intervalTimer() {
 
   setInterval(intervalTimer, 100);
 
-const LABELS = ['background', 'four fingers', 'L shape', 'three fingers', 'thumbsup', 'two fingers (V shape)', 'pinky and finger']
+const LABELS = ["blank", "fist", "five", "ok", "thumbsdown", "thumbsup"]
  function sendCanvas(){
       var canvasData = canvasFilters.toDataURL();
       $.post("http://localhost:3000/request",

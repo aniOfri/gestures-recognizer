@@ -1,7 +1,6 @@
 const { readdir, readFile }= require('fs/promises');
 const tf =require('@tensorflow/tfjs-node');
 
-//var PNG = require('png-js');
 var getPixels = require("get-pixels")
 
 const express = require('express')
@@ -10,12 +9,16 @@ const bodyParser = require('body-parser')
 const cors = require('cors');
 
 const PORT = 3000
-const IMAGE_WIDTH = 24;
-const IMAGE_HEIGHT = 21;
+const IMAGE_WIDTH = 120;
+const IMAGE_HEIGHT = 105;
 const IMAGE_CHANNELS = 1; 
 const NUM_OUTPUT_CLASSES = 6;
+const LABELS = ["blank", "fist", "five", "ok", "thumbsdown", "thumbsup"]
+
 var model;
 var trained = false;
+var TRAINBATCH = 0;
+var TESTBATCH = 0;
 
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
 
@@ -59,7 +62,13 @@ app.post('/request', async (req, res) =>{;
     console.log(`Server is runing on port ${PORT}`)
 })*/
 
-const LABELS = ["blank", "fist", "five", "ok", "thumbsdown", "thumbsup"]
+function printProgress(prefix, progress){
+    process.stdout.clearLine();
+    process.stdout.cursorTo(0);
+    process.stdout.write(prefix + progress.toFixed(0) + '%');
+    if (progress == 100)
+        console.log();
+}
 
 async function getData(){
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
@@ -68,9 +77,11 @@ async function getData(){
     
     var train_data = [];
     for (let label of LABELS){
-        console.log("Getting TRAINING DATA of "+label+"...");
+        prefix = "Getting TRAINING DATA of "+label+"...  "
         const files_names = await readdir(TRAINING+label);
         for (let i = 0; i <= Math.round(files_names.length*(3/4)); i++){
+            printProgress(prefix, i/Math.round(files_names.length*(3/4))*100);
+            TRAINBATCH++;
             let file_path = TRAINING+label+"/"+files_names[i];
             let array = []
             getPixels(file_path, function(err, pixels) {    
@@ -92,9 +103,11 @@ async function getData(){
 
     var test_data = [];
     for (let label of LABELS){
-        console.log("Getting TEST DATA of "+label+"...");
+        prefix = "Getting TEST DATA of "+label+"...  "
         const files_names = await readdir(TEST+label);
-        for (let i = Math.round(files_names.length*(3/4)); i < Math.round(files_names.length*(1/4)); i++){
+        for (let i = Math.round(files_names.length*(3/4)); i < files_names.length; i++){ 
+            printProgress(prefix, (i-Math.round(files_names.length*(3/4))/(files_names.length-Math.round(files_names.length*(3/4)))*100)); 
+            TESTBATCH++;
             let file_path = TEST+label+"/"+files_names[i];
             let array = []
             getPixels(file_path, function(err, pixels) {    
@@ -184,8 +197,8 @@ function getModel(){
 
 async function train(model, data){
     const BATCH_SIZE = 300;
-    const TRAIN = 3000;
-    const TEST = 2000;
+    const TRAIN = TRAINBATCH;
+    const TEST = TESTBATCH;
 
     console.log("Tidying train data..");
     const [trainXs, trainYs] = tf.tidy(()=>{
@@ -211,12 +224,12 @@ async function train(model, data){
     return model.fit(trainXs, trainYs, {
         batchSize: BATCH_SIZE,
         validationData: [testXs, testYs],
-        epochs: 10,
+        epochs: 50,
         shuffle: true
       });
 }
 
-function normalizeData(batchSize, data){
+function normalizeData(batchSize, data, prefix){
     var imagesArray = new Float32Array(batchSize * IMAGE_WIDTH*IMAGE_HEIGHT);
     var labelsArray = new Uint8Array(batchSize * NUM_OUTPUT_CLASSES);
 
