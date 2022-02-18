@@ -106,7 +106,7 @@ async function getData(){
         prefix = "Getting TEST DATA of "+label+"...  "
         const files_names = await readdir(TEST+label);
         for (let i = Math.round(files_names.length*(3/4)); i < files_names.length; i++){ 
-            printProgress(prefix, (i-Math.round(files_names.length*(3/4))/(files_names.length-Math.round(files_names.length*(3/4)))*100)); 
+            printProgress(prefix, (i-Math.round(files_names.length*(3/4))/(Math.round(files_names.length*(1/4)))*100)); 
             TESTBATCH++;
             let file_path = TEST+label+"/"+files_names[i];
             let array = []
@@ -196,7 +196,7 @@ function getModel(){
 }
 
 async function train(model, data){
-    const BATCH_SIZE = 300;
+    const BATCH_SIZE = 128;
     const TRAIN = TRAINBATCH;
     const TEST = TESTBATCH;
 
@@ -224,12 +224,12 @@ async function train(model, data){
     return model.fit(trainXs, trainYs, {
         batchSize: BATCH_SIZE,
         validationData: [testXs, testYs],
-        epochs: 50,
+        epochs: 1,
         shuffle: true
       });
 }
 
-function normalizeData(batchSize, data, prefix){
+function normalizeData(batchSize, data){
     var imagesArray = new Float32Array(batchSize * IMAGE_WIDTH*IMAGE_HEIGHT);
     var labelsArray = new Uint8Array(batchSize * NUM_OUTPUT_CLASSES);
 
@@ -276,10 +276,14 @@ async function start(){
     model = getModel();
     console.log("Model generated.");
 
-    console.log("Training model..")
-    await train(model, data);
-    console.log("Model trained.")
-    
+    for (let i = 0; i < 10; i++){
+        console.log("Training model..")
+        await train(model, data);
+        console.log("Model trained.")
+        console.log("Saving model..")
+        await model.save('file://./my-model');
+    }
+
     //console.log("Loading model.")
     //model = await tf.loadLayersModel('file://./my-model/model.json');
 
