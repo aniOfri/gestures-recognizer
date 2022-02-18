@@ -106,7 +106,7 @@ async function getData(){
         prefix = "Getting TEST DATA of "+label+"...  "
         const files_names = await readdir(TEST+label);
         for (let i = Math.round(files_names.length*(3/4)); i < files_names.length; i++){ 
-            printProgress(prefix, (i-Math.round(files_names.length*(3/4))/(Math.round(files_names.length*(1/4)))*100)); 
+            printProgress(prefix, (i-Math.round(files_names.length*(3/4))/(files_names.length*(1/4)))*100); 
             TESTBATCH++;
             let file_path = TEST+label+"/"+files_names[i];
             let array = []
@@ -224,7 +224,7 @@ async function train(model, data){
     return model.fit(trainXs, trainYs, {
         batchSize: BATCH_SIZE,
         validationData: [testXs, testYs],
-        epochs: 1,
+        epochs: 10,
         shuffle: true
       });
 }
@@ -274,15 +274,11 @@ async function start(){
 
     console.log("Generating model..");
     model = getModel();
-    console.log("Model generated.");
+	console.log("Model generated.");
 
-    for (let i = 0; i < 10; i++){
-        console.log("Training model..")
-        await train(model, data);
-        console.log("Model trained.")
-        console.log("Saving model..")
-        await model.save('file://./my-model');
-    }
+	console.log("Training model..")
+	await train(model, data);
+	console.log("Model trained.")
 
     //console.log("Loading model.")
     //model = await tf.loadLayersModel('file://./my-model/model.json');
