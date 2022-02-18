@@ -39,7 +39,7 @@ function intervalTimer() {
  function applyFilters(){
   let src = cv.imread('canvas');
   let dst = new cv.Mat();
-  let dsize = new cv.Size(120, 105);
+  let dsize = new cv.Size(50, 50  );
   cv.resize(src, dst, dsize, 0, 0, cv.INTER_AREA);
   cv.imshow('canvas', dst);
   src.delete(); dst.delete();
@@ -54,9 +54,7 @@ function intervalTimer() {
   
  }
 
-  setInterval(intervalTimer, 100);
-
-const LABELS = ["blank", "fist", "five", "ok", "thumbsdown", "thumbsup"]
+  const LABELS = ["five fingers", "fist", "L shape", "O shape", "open hand", "V shape"]
  function sendCanvas(){
       var canvasData = canvasFilters.toDataURL();
       $.post("http://localhost:3000/request",
@@ -78,7 +76,6 @@ const LABELS = ["blank", "fist", "five", "ok", "thumbsdown", "thumbsup"]
         $("#guess"+maxIndex).css('color', 'red');
       });
   }
- 
 
-  //setInterval(sendCanvas, 1000);
+  setInterval(intervalTimer, 100);
  

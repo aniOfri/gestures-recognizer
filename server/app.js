@@ -10,11 +10,11 @@ const bodyParser = require('body-parser')
 const cors = require('cors');
 
 const PORT = 3000
-const IMAGE_WIDTH = 240;
-const IMAGE_HEIGHT = 215;
+const IMAGE_WIDTH = 50;
+const IMAGE_HEIGHT = 50;
 const IMAGE_CHANNELS = 1; 
 const NUM_OUTPUT_CLASSES = 6;
-const LABELS = ["five fingers", "fist", "L shape", "O shape", "one finger", "open hand", "V shape"]
+const LABELS = ["five fingers", "fist", "L shape", "O shape","open hand", "V shape"]
 
 var model;
 var trained = false;
@@ -59,9 +59,9 @@ app.post('/request', async (req, res) =>{;
     res.status(404);
 })
 
-/*app.listen(PORT, ()=>{
+app.listen(PORT, ()=>{
     console.log(`Server is runing on port ${PORT}`)
-})*/
+})
 
 function printProgress(prefix, progress){
     process.stdout.clearLine();
@@ -80,8 +80,8 @@ async function getData(){
     for (let label of LABELS){
         prefix = "Getting TRAINING DATA of "+label+"...  "
         const files_names = await readdir(TRAINING+label);
-        for (let i = 0; i <= files_names; i++){
-            printProgress(prefix, (i/files_names)*100);
+        for (let i = 0; i < files_names.length; i++){
+            printProgress(prefix, (i/files_names.length)*100);
             TRAINBATCH++;
             let file_path = TRAINING+label+"/"+files_names[i];
             let array = []
@@ -106,8 +106,8 @@ async function getData(){
     for (let label of LABELS){
         prefix = "Getting TEST DATA of "+label+"...  "
         const files_names = await readdir(TEST+label);
-        for (let i = 0; i < files_names; i++){ 
-            printProgress(prefix, (i/files_names)*100); 
+        for (let i = 0; i < files_names.length; i++){ 
+            printProgress(prefix, (i/files_names.length)*100); 
             TESTBATCH++;
             let file_path = TEST+label+"/"+files_names[i];
             let array = []
@@ -197,7 +197,7 @@ function getModel(){
 }
 
 async function train(model, data){
-    const BATCH_SIZE = 5;
+    const BATCH_SIZE = 100;
     const TRAIN = TRAINBATCH;
     const TEST = TESTBATCH;
 
@@ -269,7 +269,7 @@ async function doPrediction(model, data, batchSize = 500) {
 }
 
 async function start(){
-    console.log("Collecting data..");
+    /*console.log("Collecting data..");
     const data = await getData();
     console.log("Data collected.");
 
@@ -279,15 +279,15 @@ async function start(){
 
 	console.log("Training model..")
 	await train(model, data);
-	console.log("Model trained.")
+	console.log("Model trained.")*/
 
-    //console.log("Loading model.")
-    //model = await tf.loadLayersModel('file://./my-model/model.json');
+    console.log("Loading model.")
+    model = await tf.loadLayersModel('file://./my-model/model.json');
 
-    await showAccuracy(model, data[0], 50);
+    /*await showAccuracy(model, data[0], 50);
 
     console.log("Saving model..")
-    await model.save('file://./my-model');
+    await model.save('file://./my-model');*/
     trained = true;
 }
 
