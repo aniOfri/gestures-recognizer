@@ -1,7 +1,8 @@
-const { readdir, readFile }= require('fs/promises');
+const {readdir} = require('fs/promises');
 const tf =require('@tensorflow/tfjs-node');
 
-var getPixels = require("get-pixels")
+const getPixels = require("get-pixels")
+const csv = require('csv-parser')
 
 const express = require('express')
 const app = express()
@@ -9,11 +10,11 @@ const bodyParser = require('body-parser')
 const cors = require('cors');
 
 const PORT = 3000
-const IMAGE_WIDTH = 120;
-const IMAGE_HEIGHT = 105;
+const IMAGE_WIDTH = 240;
+const IMAGE_HEIGHT = 215;
 const IMAGE_CHANNELS = 1; 
 const NUM_OUTPUT_CLASSES = 6;
-const LABELS = ["blank", "fist", "five", "ok", "thumbsdown", "thumbsup"]
+const LABELS = ["five fingers", "fist", "L shape", "O shape", "one finger", "open hand", "V shape"]
 
 var model;
 var trained = false;
@@ -58,9 +59,9 @@ app.post('/request', async (req, res) =>{;
     res.status(404);
 })
 
-app.listen(PORT, ()=>{
+/*app.listen(PORT, ()=>{
     console.log(`Server is runing on port ${PORT}`)
-})
+})*/
 
 function printProgress(prefix, progress){
     process.stdout.clearLine();
@@ -79,8 +80,8 @@ async function getData(){
     for (let label of LABELS){
         prefix = "Getting TRAINING DATA of "+label+"...  "
         const files_names = await readdir(TRAINING+label);
-        for (let i = 0; i <= 750; i++){
-            printProgress(prefix, (i/750)*100);
+        for (let i = 0; i <= files_names; i++){
+            printProgress(prefix, (i/files_names)*100);
             TRAINBATCH++;
             let file_path = TRAINING+label+"/"+files_names[i];
             let array = []
@@ -105,8 +106,8 @@ async function getData(){
     for (let label of LABELS){
         prefix = "Getting TEST DATA of "+label+"...  "
         const files_names = await readdir(TEST+label);
-        for (let i = 750; i < 1000; i++){ 
-            printProgress(prefix, ((i-750)/250)*100); 
+        for (let i = 0; i < files_names; i++){ 
+            printProgress(prefix, (i/files_names)*100); 
             TESTBATCH++;
             let file_path = TEST+label+"/"+files_names[i];
             let array = []
@@ -196,7 +197,7 @@ function getModel(){
 }
 
 async function train(model, data){
-    const BATCH_SIZE = 128;
+    const BATCH_SIZE = 5;
     const TRAIN = TRAINBATCH;
     const TEST = TESTBATCH;
 
