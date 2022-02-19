@@ -14,7 +14,7 @@ const IMAGE_WIDTH = 50;
 const IMAGE_HEIGHT = 50;
 const IMAGE_CHANNELS = 1; 
 const NUM_OUTPUT_CLASSES = 5;
-const LABELS = ["five fingers", "fist", "L shape", "O shape","open hand"]
+const LABELS = ["five fingers", "fist", "L shape", "O shape","V shape"]
 
 var model;
 var loaded = false;
@@ -80,8 +80,8 @@ async function getData(){
     for (let label of LABELS){
         prefix = "Getting TRAINING DATA of "+label+"...  "
         const files_names = await readdir(TRAINING+label);
-        for (let i = 0; i < files_names.length; i++){
-            printProgress(prefix, (i/files_names.length)*100);
+        for (let i = 0; i < Math.round(files_names.length*(3/4)); i++){
+            printProgress(prefix, (i/Math.round(files_names.length*(3/4)))*100);
             TRAINBATCH++;
             let file_path = TRAINING+label+"/"+files_names[i];
             let array = []
@@ -106,8 +106,8 @@ async function getData(){
     for (let label of LABELS){
         prefix = "Getting TEST DATA of "+label+"...  "
         const files_names = await readdir(TEST+label);
-        for (let i = 0; i < files_names.length; i++){ 
-            printProgress(prefix, (i/files_names.length)*100); 
+        for (let i = Math.round(files_names.length*(3/4)); i < files_names.length; i++){ 
+            printProgress(prefix, (i-Math.round(files_names.length*(3/4))/files_names.length)*100); 
             TESTBATCH++;
             let file_path = TEST+label+"/"+files_names[i];
             let array = []
@@ -268,7 +268,7 @@ async function doPrediction(model, data, batchSize = 500) {
     return
 }
 
-const TRAINING = false;
+const TRAINING = true;
 async function start(){
     if (TRAINING){
         console.log("Collecting data..");

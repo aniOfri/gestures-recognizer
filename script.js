@@ -27,7 +27,6 @@ function intervalTimer() {
    ctx.clearRect(0,0,video.videoWidth,video.videoHeight);
    ctx.drawImage(video,0,0,video.videoWidth,video.videoHeight);
    ctx.save();
-   ctx.scale(1, -1);
    ctx.drawImage(video,0,-video.videoHeight,video.videoWidth,video.videoHeight);
    ctx.restore();
 
@@ -54,7 +53,7 @@ function intervalTimer() {
   
  }
 
-  const LABELS = ["five fingers", "fist", "L shape", "O shape", "open hand"]
+  const LABELS = ["five fingers", "fist", "L shape", "O shape", "V shape"]
  function sendCanvas(){
       var canvasData = canvasFilters.toDataURL();
       $.post("http://localhost:3000/request",
