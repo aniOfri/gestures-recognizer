@@ -54,7 +54,7 @@ function intervalTimer() {
   
  }
 
-  const LABELS = ["five fingers", "fist", "L shape", "O shape", "open hand", "V shape"]
+  const LABELS = ["five fingers", "fist", "L shape", "O shape", "open hand"]
  function sendCanvas(){
       var canvasData = canvasFilters.toDataURL();
       $.post("http://localhost:3000/request",

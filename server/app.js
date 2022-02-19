@@ -13,11 +13,11 @@ const PORT = 3000
 const IMAGE_WIDTH = 50;
 const IMAGE_HEIGHT = 50;
 const IMAGE_CHANNELS = 1; 
-const NUM_OUTPUT_CLASSES = 6;
-const LABELS = ["five fingers", "fist", "L shape", "O shape","open hand", "V shape"]
+const NUM_OUTPUT_CLASSES = 5;
+const LABELS = ["five fingers", "fist", "L shape", "O shape","open hand"]
 
 var model;
-var trained = false;
+var loaded = false;
 var TRAINBATCH = 0;
 var TESTBATCH = 0;
 
@@ -28,7 +28,7 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 app.use(cors()); 
 
 app.post('/request', async (req, res) =>{;
-    if (trained = true){
+    if (loaded){
         var data = req.body.dataUrl;
 
         await getPixels(data, async function(err, pixels) { 
@@ -236,7 +236,7 @@ function normalizeData(batchSize, data){
 
     for (let i = 0; i < batchSize; i++) {
         var image = new Float32Array(data[i][1]);
-        output = [0, 0, 0, 0, 0, 0];
+        output = [0, 0, 0, 0, 0];
         output[LABELS.indexOf(data[i][0])] = 1;
         var label = new Uint8Array(output);
 
@@ -268,27 +268,32 @@ async function doPrediction(model, data, batchSize = 500) {
     return
 }
 
+const TRAINING = false;
 async function start(){
-    /*console.log("Collecting data..");
-    const data = await getData();
-    console.log("Data collected.");
+    if (TRAINING){
+        console.log("Collecting data..");
+        const data = await getData();
+        console.log("Data collected.");
+    
+        console.log("Generating model..");
+        model = getModel();
+        console.log("Model generated.");
+    
+        console.log("Training model..")
+        await train(model, data);
+        console.log("Model trained.")
 
-    console.log("Generating model..");
-    model = getModel();
-	console.log("Model generated.");
+        await showAccuracy(model, data[0], 50);
 
-	console.log("Training model..")
-	await train(model, data);
-	console.log("Model trained.")*/
+        console.log("Saving model..")
+        await model.save('file://./my-model');
+    }
+    else {
+        console.log("Loading model.")
+        model = await tf.loadLayersModel('file://./my-model/model.json');
+    }
 
-    console.log("Loading model.")
-    model = await tf.loadLayersModel('file://./my-model/model.json');
-
-    /*await showAccuracy(model, data[0], 50);
-
-    console.log("Saving model..")
-    await model.save('file://./my-model');*/
-    trained = true;
+    loaded = true;
 }
 
 start();
