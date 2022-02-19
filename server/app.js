@@ -107,7 +107,7 @@ async function getData(){
         prefix = "Getting TEST DATA of "+label+"...  "
         const files_names = await readdir(TEST+label);
         for (let i = Math.round(files_names.length*(3/4)); i < files_names.length; i++){ 
-            printProgress(prefix, (i-Math.round(files_names.length*(3/4))/files_names.length)*100); 
+            printProgress(prefix, ((i-Math.round(files_names.length*(3/4)))/(files_names.length-Math.round(files_names.length*(3/4))))*100); 
             TESTBATCH++;
             let file_path = TEST+label+"/"+files_names[i];
             let array = []
@@ -197,7 +197,7 @@ function getModel(){
 }
 
 async function train(model, data){
-    const BATCH_SIZE = 100;
+    const BATCH_SIZE = 2000;
     const TRAIN = TRAINBATCH;
     const TEST = TESTBATCH;
 
@@ -225,7 +225,7 @@ async function train(model, data){
     return model.fit(trainXs, trainYs, {
         batchSize: BATCH_SIZE,
         validationData: [testXs, testYs],
-        epochs: 10,
+        epochs: 20,
         shuffle: true
       });
 }
@@ -268,7 +268,7 @@ async function doPrediction(model, data, batchSize = 500) {
     return
 }
 
-const TRAINING = true;
+const TRAINING = false;
 async function start(){
     if (TRAINING){
         console.log("Collecting data..");
