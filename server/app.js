@@ -42,7 +42,7 @@ app.post('/request', async (req, res) =>{;
                 let value = (pixels[j]+pixels[j+1]+pixels[j+2]+pixels[j+3])/4 < 100 ? 1 : 0;
                 array.push(value);
             }
-
+    
             const testData = normalizeData(1, [[0, array]])
             const testxs = testData.xs.reshape([1, IMAGE_WIDTH, IMAGE_HEIGHT, 1]);
             const preds = model.predict(testxs);
@@ -86,10 +86,11 @@ async function getDataUnsplit(){
                     return
                 }
                 var pixels = Array.from(pixels.data);
-                for (let j = 0; j < IMAGE_WIDTH*IMAGE_HEIGHT*4; j+=8){
-                    let value = (pixels[j]+pixels[j+1]+pixels[j+2]+pixels[j+3])/4 < 100 ? 0 : 1;
+                for (let j = 0; j < IMAGE_WIDTH*IMAGE_HEIGHT*4; j+=4){
+                    let value = (pixels[j]+pixels[j+1]+pixels[j+2])/3
                     array.push(value);
                 }
+                //console.dir(array, {'maxArrayLength': null});
             });
             await delay(1)
             data.push([label, array]);
@@ -131,7 +132,7 @@ async function getDataSplit(){
                     return
                 }
                 var pixels = Array.from(pixels.data);
-                for (let j = 0; j < IMAGE_WIDTH*IMAGE_HEIGHT*4; j+=8){
+                for (let j = 0; j < IMAGE_WIDTH*IMAGE_HEIGHT*4; j+=4){
                     let value = (pixels[j]+pixels[j+1]+pixels[j+2]+pixels[j+3])/4 < 100 ? 0 : 1;
                     array.push(value);
                 }
@@ -157,7 +158,7 @@ async function getDataSplit(){
                     return
                 }
                 var pixels = Array.from(pixels.data);
-                for (let j = 0; j < IMAGE_WIDTH*IMAGE_HEIGHT*4; j+=8){
+                for (let j = 0; j < IMAGE_WIDTH*IMAGE_HEIGHT*4; j+=4){
                     let value = (pixels[j]+pixels[j+1]+pixels[j+2]+pixels[j+3])/4 < 100 ? 0 : 1;
                     array.push(value);
                 }
@@ -237,7 +238,7 @@ function getModel(){
 }
 
 async function train(model, data){
-    const BATCH_SIZE = 2000;
+    const BATCH_SIZE = TRAINBATCH;
     const TRAIN = TRAINBATCH;
     const TEST = TESTBATCH;
 
@@ -265,7 +266,7 @@ async function train(model, data){
     return model.fit(trainXs, trainYs, {
         batchSize: BATCH_SIZE,
         validationData: [testXs, testYs],
-        epochs: 20,
+        epochs: 80,
         shuffle: true
       });
 }
@@ -308,7 +309,7 @@ async function doPrediction(model, data, batchSize = 500) {
     return
 }
 
-const TRAINING = false;
+const TRAINING = true;
 async function start(){
     if (TRAINING){
         console.log("Collecting data..");
