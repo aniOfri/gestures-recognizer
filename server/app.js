@@ -66,7 +66,58 @@ function printProgress(prefix, progress){
         console.log();
 }
 
-async function getData(){
+// ONE FOLDER OF DATASET
+async function getDataUnsplit(){
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
+    const PATH = "./data/";
+    
+    var data = [];
+    for (let label of LABELS){
+        prefix = "Getting DATA of "+label+"...  "
+        const files_names = await readdir(PATH+label);
+        for (let i = 0; i < files_names.length; i++){
+            printProgress(prefix, (i/files_names.length)*100);
+            TRAINBATCH++;
+            let file_path = PATH+label+"/"+files_names[i];
+            let array = []
+            getPixels(file_path, function(err, pixels) {    
+                if (err){
+                    console.log(err)
+                    return
+                }
+                var pixels = Array.from(pixels.data);
+                for (let j = 0; j < IMAGE_WIDTH*IMAGE_HEIGHT*4; j+=8){
+                    let value = (pixels[j]+pixels[j+1]+pixels[j+2]+pixels[j+3])/4 < 100 ? 0 : 1;
+                    array.push(value);
+                }
+            });
+            await delay(1)
+            data.push([label, array]);
+        }
+    }
+    TESTBATCH = TRAINBATCH*(1/4);
+    TRAINBATCH = TRAINBATCH*(3/4);
+
+    data = shuffleArray(data);
+    sliced = chunkArray(data, TRAINBATCH*(3/4))
+
+    let train_data = sliced[0];
+    let test_data = sliced[1];
+
+    return [train_data, test_data];
+}
+
+function chunkArray(arr,n){
+    var chunkLength = Math.max(arr.length/n ,1);
+    var chunks = [];
+    for (var i = 0; i < n; i++) {
+        if(chunkLength*(i+1)<=arr.length)chunks.push(arr.slice(chunkLength*i, chunkLength*(i+1)));
+    }
+    return chunks; 
+}
+
+// TWO FOLDERS OF DATASETS (TRAIN AND TEST)
+async function getDataSplit(){
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
     const TRAINING = "./data/";
     const TEST = "./data/";
@@ -263,11 +314,11 @@ async function doPrediction(model, data, batchSize = 500) {
     return
 }
 
-const TRAINING = true;
+const TRAINING = false;
 async function start(){
     if (TRAINING){
         console.log("Collecting data..");
-        const data = await getData();
+        const data = await getDataUnsplit();
         console.log("Data collected.");
     
         console.log("Generating model..");
