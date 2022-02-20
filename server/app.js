@@ -95,29 +95,19 @@ async function getDataUnsplit(){
             data.push([label, array]);
         }
     }
-    let half = TRAINBATCH*(1/2);
-    TESTBATCH = half % 2 == 0 ? TRAINBATCH*(1/2) : Math.floor(TRAINBATCH*(1/2));
-    TRAINBATCH = half % 2 == 0 ? TRAINBATCH*(1/2) : Math.floor(TRAINBATCH*(1/2));
+    let split = TRAINBATCH*(3/4);
+    TESTBATCH = split % 2 == 0 ? TRAINBATCH-split : Math.floor(TRAINBATCH-split);
+    TRAINBATCH = split % 2 == 0 ? split : Math.floor(split);
 
     console.log(TRAINBATCH, TESTBATCH)
 
     data = shuffleArray(data);
 
-    sliced = chunkArray(data, 2)
-
-    let train_data = sliced[0];
-    let test_data = sliced[1];
+    let train_data = data.splice(0, TRAINBATCH);
+    let test_data = data;
+    console.log(train_data.length, test_data.length)
 
     return [train_data, test_data];
-}
-
-function chunkArray(arr,n){
-    var chunkLength = Math.max(arr.length/n ,1);
-    var chunks = [];
-    for (var i = 0; i < n; i++) {
-        if(chunkLength*(i+1)<=arr.length)chunks.push(arr.slice(chunkLength*i, chunkLength*(i+1)));
-    }
-    return chunks; 
 }
 
 // TWO FOLDERS OF DATASETS (TRAIN AND TEST)
@@ -318,7 +308,7 @@ async function doPrediction(model, data, batchSize = 500) {
     return
 }
 
-const TRAINING = true;
+const TRAINING = false;
 async function start(){
     if (TRAINING){
         console.log("Collecting data..");
