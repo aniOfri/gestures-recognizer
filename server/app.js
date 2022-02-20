@@ -2,7 +2,6 @@ const {readdir} = require('fs/promises');
 const tf =require('@tensorflow/tfjs-node');
 
 const getPixels = require("get-pixels")
-const csv = require('csv-parser')
 
 const express = require('express')
 const app = express()
@@ -57,10 +56,6 @@ app.post('/request', async (req, res) =>{;
         });
     }
     res.status(404);
-})
-
-app.listen(PORT, ()=>{
-    console.log(`Server is runing on port ${PORT}`)
 })
 
 function printProgress(prefix, progress){
@@ -268,7 +263,7 @@ async function doPrediction(model, data, batchSize = 500) {
     return
 }
 
-const TRAINING = false;
+const TRAINING = true;
 async function start(){
     if (TRAINING){
         console.log("Collecting data..");
@@ -291,6 +286,10 @@ async function start(){
     else {
         console.log("Loading model.")
         model = await tf.loadLayersModel('file://./my-model/model.json');
+
+        app.listen(PORT, ()=>{
+            console.log(`Server is runing on port ${PORT}`)
+        })
     }
 
     loaded = true;
