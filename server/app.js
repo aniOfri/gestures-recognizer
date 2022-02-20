@@ -95,11 +95,15 @@ async function getDataUnsplit(){
             data.push([label, array]);
         }
     }
-    TESTBATCH = TRAINBATCH*(1/4);
-    TRAINBATCH = TRAINBATCH*(3/4);
+    let half = TRAINBATCH*(1/2);
+    TESTBATCH = half % 2 == 0 ? TRAINBATCH*(1/2) : Math.floor(TRAINBATCH*(1/2));
+    TRAINBATCH = half % 2 == 0 ? TRAINBATCH*(1/2) : Math.floor(TRAINBATCH*(1/2));
+
+    console.log(TRAINBATCH, TESTBATCH)
 
     data = shuffleArray(data);
-    sliced = chunkArray(data, TRAINBATCH*(3/4))
+
+    sliced = chunkArray(data, 2)
 
     let train_data = sliced[0];
     let test_data = sliced[1];
@@ -314,7 +318,7 @@ async function doPrediction(model, data, batchSize = 500) {
     return
 }
 
-const TRAINING = false;
+const TRAINING = true;
 async function start(){
     if (TRAINING){
         console.log("Collecting data..");
