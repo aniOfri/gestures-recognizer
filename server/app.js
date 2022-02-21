@@ -309,7 +309,7 @@ async function doPrediction(model, data, batchSize = 500) {
     return
 }
 
-const TRAINING = true;
+const TRAINING = false;
 async function start(){
     if (TRAINING){
         console.log("Collecting data..");
