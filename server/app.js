@@ -87,7 +87,7 @@ async function getDataUnsplit(){
                 }
                 var pixels = Array.from(pixels.data);
                 for (let j = 0; j < IMAGE_WIDTH*IMAGE_HEIGHT*4; j+=4){
-                    let value = (pixels[j]+pixels[j+1]+pixels[j+2])/3
+                    let value = (pixels[j]+pixels[j+1]+pixels[j+2])/3 / 255
                     array.push(value);
                 }
                 //console.dir(array, {'maxArrayLength': null});
@@ -238,7 +238,7 @@ function getModel(){
 }
 
 async function train(model, data){
-    const BATCH_SIZE = TRAINBATCH;
+    const BATCH_SIZE = 1500;
     const TRAIN = TRAINBATCH;
     const TEST = TESTBATCH;
 
