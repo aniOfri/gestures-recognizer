@@ -100,13 +100,10 @@ async function getDataUnsplit(){
     TESTBATCH = split % 2 == 0 ? TRAINBATCH-split : Math.floor(TRAINBATCH-split);
     TRAINBATCH = split % 2 == 0 ? split : Math.floor(split);
 
-    console.log(TRAINBATCH, TESTBATCH)
-
     data = shuffleArray(data);
 
     let train_data = data.splice(0, TRAINBATCH);
     let test_data = data;
-    console.log(train_data.length, test_data.length)
 
     return [train_data, test_data];
 }
@@ -220,6 +217,7 @@ function getModel(){
       kernelInitializer: 'varianceScaling',
       activation: 'relu'
     }));
+    
 
     model.add(tf.layers.dense({
       units: NUM_OUTPUT_CLASSES,
@@ -238,7 +236,7 @@ function getModel(){
 }
 
 async function train(model, data){
-    const BATCH_SIZE = 1500;
+    const BATCH_SIZE = 128;
     const TRAIN = TRAINBATCH;
     const TEST = TESTBATCH;
 
@@ -266,7 +264,7 @@ async function train(model, data){
     return model.fit(trainXs, trainYs, {
         batchSize: BATCH_SIZE,
         validationData: [testXs, testYs],
-        epochs: 80,
+        epochs: 60,
         shuffle: true
       });
 }
@@ -309,7 +307,7 @@ async function doPrediction(model, data, batchSize = 500) {
     return
 }
 
-const TRAINING = true;
+const TRAINING = false;
 async function start(){
     if (TRAINING){
         console.log("Collecting data..");

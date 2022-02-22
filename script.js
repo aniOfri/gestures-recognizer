@@ -64,7 +64,7 @@ function intervalTimer() {
         results = data.response;
         var maxValue = 0;
         var maxIndex = -1;
-        for (let i = 0; i < 7; i++){
+        for (let i = 0; i < LABELS.length; i++){
           $("#guess"+i).css('color', 'black');
           $("#guess"+i).html(LABELS[i]+": "+results[i]);
           if (results[i] > maxValue){
