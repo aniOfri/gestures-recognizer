@@ -12,8 +12,8 @@ const PORT = 3000
 const IMAGE_WIDTH = 50;
 const IMAGE_HEIGHT = 50;
 const IMAGE_CHANNELS = 1; 
-const NUM_OUTPUT_CLASSES = 5;
-const LABELS = ["five fingers", "fist", "L shape", "O shape","V shape"]
+const NUM_OUTPUT_CLASSES = 8;
+const LABELS = ["five fingers", "fist", "L shape", "O shape","V shape", "three fingers", "surfers", "middle finger"]
 
 var model;
 var loaded = false;
@@ -277,7 +277,7 @@ function normalizeData(batchSize, data){
 
     for (let i = 0; i < batchSize; i++) {
         var image = new Float32Array(data[i][1]);
-        output = [0, 0, 0, 0, 0];
+        output = [0, 0, 0, 0, 0, 0, 0, 0];
         output[LABELS.indexOf(data[i][0])] = 1;
         var label = new Uint8Array(output);
 
@@ -309,7 +309,7 @@ async function doPrediction(model, data, batchSize = 500) {
     return
 }
 
-const TRAINING = false;
+const TRAINING = true;
 async function start(){
     if (TRAINING){
         console.log("Collecting data..");
