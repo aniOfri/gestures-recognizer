@@ -12,8 +12,8 @@ const PORT = 3000
 const IMAGE_WIDTH = 50;
 const IMAGE_HEIGHT = 50;
 const IMAGE_CHANNELS = 1; 
-const NUM_OUTPUT_CLASSES = 8;
-const LABELS = ["five fingers", "fist", "L shape", "O shape","V shape", "three fingers", "surfers", "middle finger"]
+const NUM_OUTPUT_CLASSES = 9;
+const LABELS = ["five fingers", "fist", "L shape", "O shape","V shape", "three fingers", "surfers", "middle finger", "rock n roll"]
 
 var model;
 var loaded = false;
@@ -264,7 +264,7 @@ async function train(model, data){
     return model.fit(trainXs, trainYs, {
         batchSize: BATCH_SIZE,
         validationData: [testXs, testYs],
-        epochs: 60,
+        epochs: 30,
         shuffle: true
       });
 }
@@ -275,7 +275,7 @@ function normalizeData(batchSize, data){
 
     for (let i = 0; i < batchSize; i++) {
         var image = new Float32Array(data[i][1]);
-        output = [0, 0, 0, 0, 0, 0, 0, 0];
+        output = [0, 0, 0, 0, 0, 0, 0, 0, 0];
         output[LABELS.indexOf(data[i][0])] = 1;
         var label = new Uint8Array(output);
 

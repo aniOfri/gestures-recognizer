@@ -53,7 +53,7 @@ function intervalTimer() {
   
  }
 
- const LABELS = ["five fingers", "fist", "L shape", "O shape","V shape", "three fingers", "surfers", "middle finger"]
+ const LABELS = ["five fingers", "fist", "L shape", "O shape","V shape", "three fingers", "surfers", "middle finger", "rock n roll"]
  function sendCanvas(){
       var canvasData = canvasFilters.toDataURL();
       $.post("http://localhost:3000/request",
